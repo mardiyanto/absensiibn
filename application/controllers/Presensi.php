@@ -12,61 +12,33 @@ class Presensi extends CI_Controller
             redirect('auth');
         }
         $this->load->model('Presensi_model');
+        $this->load->model('Gedung_model');
         $this->load->library('form_validation');
         $this->user = $this->ion_auth->user()->row();
         $this->load->library('user_agent');
-    }
-
-    public function index()
-    {
-        $user = $this->user;
-        $data = array(
-            'user' => $user, 'users' => $this->ion_auth->user()->row(),
-        );
-        $this->template->load('template/template', 'presensi/presensi_v', $data);
-        $this->load->view('template/datatables');
-    }
-
-    public function read($id)
-    {
-        $this->session->set_userdata('referred_from', current_url());
-        $chek = $this->ion_auth->is_admin();
-        if (!$chek) {
-            $hasil = 0;
-        } else {
-            $hasil = 1;
-        }
-        $user = $this->user;
-
-        if ($id == "S") {
-            $presensi = $this->Presensi_model->get_all_query_1();
-        } else {
-            $presensi = $this->Presensi_model->get_all_query_2();
-        }
-
-        $data = array(
-            'presensi_data' => $presensi,
-            'user' => $user,
-            'users'     => $this->ion_auth->user()->row(),
-            'result' => $hasil,
-        );
-        $this->template->load('template/template', 'presensi/presensi_list', $data);
-        $this->load->view('template/datatables');
-    }
-
-    public function data()
-    {
-        if ($this->uri->segment(3) == "S") {
-            $this->output_json($this->Presensi_model->get_all_q_1(), false);
-        } else {
-            $this->output_json($this->Presensi_model->get_all_q_2(), false);
-        }
     }
 
     public function output_json($data, $encode = true)
     {
         if ($encode) $data = json_encode($data);
         $this->output->set_content_type('application/json')->set_output($data);
+    }
+
+    public function data()
+    {
+        $this->output_json($this->Presensi_model->get_all_q($this->uri->segment(3)), false);
+    }
+
+    public function index()
+    {
+        $user = $this->user;
+        $gedung = $this->Gedung_model->get_all();
+        $data = array(
+            'gedung_data' => $gedung,
+            'user' => $user, 'users'     => $this->ion_auth->user()->row(),
+        );
+        $this->template->load('template/template', 'presensi/presensi_v', $data);
+        $this->load->view('template/datatables');
     }
 
     public function messageAlert($type, $title)
@@ -86,7 +58,29 @@ class Presensi extends CI_Controller
         return $messageAlert;
     }
 
-    public function create()
+    public function read($id)
+    {
+        $this->session->set_userdata('referred_from', current_url());
+        $chek = $this->ion_auth->is_admin();
+        if (!$chek) {
+            $hasil = 0;
+        } else {
+            $hasil = 1;
+        }
+        $user = $this->user;
+        $presensi = $this->Presensi_model->get_all_query($id);
+        $data = array(
+            'presensi_data' => $presensi,
+            'user' => $user,
+            'users'     => $this->ion_auth->user()->row(),
+            'result' => $hasil,
+        );
+        $this->template->load('template/template', 'presensi/presensi_list', $data);
+        $this->load->view('template/datatables');
+    }
+
+
+    public function create($id)
     {
         if (!$this->ion_auth->is_admin()) {
             show_error('Hanya Administrator yang diberi hak untuk mengakses halaman ini, <a href="' . base_url('dashboard') . '">Kembali ke menu awal</a>', 403, 'Akses Terlarang');
@@ -96,7 +90,7 @@ class Presensi extends CI_Controller
             'button' => 'Create',
             'action' => site_url('presensi/create_action'),
             'id_absen' => set_value('id_absen'),
-            'nomor_induk' => set_value('nomor_induk'),
+            'id_karyawan' => set_value('id_karyawan'),
             'tgl' => set_value('tgl'),
             'jam_msk' => set_value('jam_msk'),
             'jam_klr' => set_value('jam_klr'),
@@ -107,6 +101,7 @@ class Presensi extends CI_Controller
             'users'     => $this->ion_auth->user()->row(),
         );
         $this->template->load('template/template', 'presensi/presensi_form_in', $data);
+        return  $id;
     }
 
     public function create_action()
@@ -120,11 +115,11 @@ class Presensi extends CI_Controller
             $refer =  $this->agent->referrer();
         }
         $id = $this->input->post('id');
-        $result = $this->Presensi_model->search_value($_POST['nomor_induk']);
-        $user = $this->input->post('nomor_induk');
+        $result = $this->Presensi_model->search_value($_POST['id_karyawan'], $id);
+        $karyawan = $this->input->post('id_karyawan');
         if ($result != FALSE) {
             $data = array(
-                'nomor_induk' => $result[0]->nomor_induk,
+                'id_karyawan' => $result[0]->id_karyawan,
                 'tgl' => date('Y-m-d'),
                 'jam_msk' => $this->input->post('jam_msk', TRUE),
                 'jam_klr' => $this->input->post('jam_klr', TRUE),
@@ -137,21 +132,21 @@ class Presensi extends CI_Controller
             return false;
         }
         $result_tgl = $data['tgl'];
-        $result_id = $result[0]->nomor_induk;
+        $result_id = $result[0]->id_karyawan;
         $cek_absen = $this->Presensi_model->cek_id($result_id, $result_tgl);
         if ($cek_absen !== FALSE  && $cek_absen->num_rows() == 1) {
-            $this->session->set_flashdata('messageAlert', $this->messageAlert('warning', 'Nama Sudah diabsen'));
+            $this->session->set_flashdata('messageAlert', $this->messageAlert('warning', 'Nama Anggota Sudah diabsen'));
             redirect($_SERVER['HTTP_REFERER']);
             return false;
         } else {
-            $kar_result = $result[0]->nomor_induk;
-            if ($kar_result == NULL || $user == "") {
+            $kar_result = $result[0]->id_karyawan;
+            if ($kar_result == NULL || $karyawan == "") {
                 $this->session->set_flashdata('messageAlert', $this->messageAlert('Error', 'Data tidak ditemukan'));
                 redirect($_SERVER['HTTP_REFERER']);
                 return false;
             } else {
                 $tgl = date('Y-m-d');
-                $id_user = $data['nomor_induk'];
+                $id_krywn = $data['id_karyawan'];
                 $this->Presensi_model->insert($data);
                 $this->session->set_flashdata('messageAlert', $this->messageAlert('success', 'Berhasil menambahkan data presensi'));
                 $referred_from = $this->session->userdata('referred_from');
@@ -172,13 +167,13 @@ class Presensi extends CI_Controller
                 'button' => 'Update',
                 'action' => site_url('presensi/update_action'),
                 'id_absen' => set_value('id_absen', $row->id_absen),
-                'nomor_induk' => set_value('nomor_induk', $row->nomor_induk),
-                'nama_user_1' => set_value('nama_user_1', $row->nama_user_1),
-                'nama_user_2' => set_value('nama_user_2', $row->nama_user_2),
+                'id_karyawan' => set_value('id_karyawan', $row->id_karyawan),
+                'nama_karyawan' => set_value('nama_karyawan', $row->nama_karyawan),
                 'tgl' => set_value('tgl', $row->tgl),
                 'jam_msk' => set_value('jam_msk', $row->jam_msk),
                 'jam_klr' => set_value('jam_klr', $row->jam_klr),
                 'id_khd' => set_value('id_khd', $row->id_khd),
+                'gedung_id' =>  $row->gedung_id,
                 'ket' => set_value('ket', $row->ket),
                 'id_status' => set_value('id_status', $row->ket),
                 'user' => $user, 'users'     => $this->ion_auth->user()->row(),
@@ -203,7 +198,7 @@ class Presensi extends CI_Controller
             $cek_id = $this->Presensi_model->get_by_ids($row);
             if ($cek_id->id_khd == 1) {
                 $data = array(
-                    'nomor_induk' => $this->input->post('nomor_induk', TRUE),
+                    'id_karyawan' => $this->input->post('id_karyawan', TRUE),
                     'tgl' => $this->input->post('tgl', TRUE),
                     'jam_msk' => $this->input->post('jam_msk', TRUE),
                     'jam_klr' => $this->input->post('jam_klr', TRUE),
@@ -213,7 +208,7 @@ class Presensi extends CI_Controller
                 );
             } else {
                 $data = array(
-                    'nomor_induk' => $this->input->post('nomor_induk', TRUE),
+                    'id_karyawan' => $this->input->post('id_karyawan', TRUE),
                     'tgl' => $this->input->post('tgl', TRUE),
                     'jam_msk' => $this->input->post('jam_msk', TRUE),
                     'jam_klr' => $this->input->post('jam_klr', TRUE),
@@ -247,22 +242,21 @@ class Presensi extends CI_Controller
 
     public function _rules()
     {
-        $this->form_validation->set_rules('nomor_induk', 'nomor_induk', 'trim|required');
+        $this->form_validation->set_rules('id_karyawan', 'id karyawan', 'trim|required');
         $this->form_validation->set_rules('tgl', 'tgl', 'trim|required');
         $this->form_validation->set_rules('id_khd', 'id khd', 'trim|required');
         $this->form_validation->set_rules('id_absen', 'id_absen', 'trim');
         $this->form_validation->set_error_delimiters('<span class="text-danger">', '</span>');
     }
 
-    function get_autocomplete()
+    function get_autocomplete($id)
     {
         if (isset($_GET['term'])) {
-            $result = $this->Presensi_model->search_value($_GET['term']);
-
+            $result = $this->Presensi_model->search_value($_GET['term'], $id);
             if (count($result) > 0) {
                 foreach ($result as $row)
                     $arr_result[] = array(
-                        'label' => $row->nama_user,
+                        'label'            => $row->nama_karyawan,
                     );
                 echo json_encode($arr_result);
             }

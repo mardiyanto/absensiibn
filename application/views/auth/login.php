@@ -36,20 +36,13 @@
     <div class="login-box">
 
         <!-- /.login-logo -->
-        <div class="login-box">
+        <div class="login-box pt-5">
             <!-- /.login-logo -->
             <div class="login-box-body">
-                <div class="text-center">
-                    <img src="<?php echo base_url('assets/'); ?>images/LogoTPQ.png">
-                </div>
-                <h3 class="text-center mt-0">
-                    <b>
-                        <font color="green">S
-                    </b>istem <b>A</b>bsensi <b>QR</b>code <br>
-                    <b>IBN PRINGSEWU</font></b>
+                <h3 class="text-center mt-0 mb-4">
+                    <b>S</b>istem <b>A</b>bsensi <b>Q</b>rcode
                 </h3>
-                <a href="<?= base_url('scan'); ?>" target="_BLANK"><b>Klik untuk scan absensi!</b></a>
-                <p class="login-box-msg"></p>
+                <p class="login-box-msg">Login to start session</p>
                 <div id="infoMessage" class="text-center"><?php echo $message; ?></div>
                 <?= form_open("auth/cek_login", array('id' => 'login')); ?>
                 <div class="form-group has-feedback">
@@ -77,7 +70,8 @@
                     <!-- /.col -->
                 </div>
                 <?= form_close(); ?>
-
+                <p align='center'><a href="<?= base_url('scan_kar'); ?>" target="_BLANK"><b>Klik untuk scan absensi!</b></a></p>
+                
             </div>
         </div>
         <!-- /.login-box-body -->

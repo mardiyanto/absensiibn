@@ -1,17 +1,17 @@
 <body class="hold-transition skin-blue layout-top-nav" onLoad="pindah()">
-
-    <div class="container">
+    
+<div class="container">
         <section class="content">
             <div class="row">
-                <div class="col-md-5">
-                    <div class="box box-info">
+                <div class="col-md-6">
+                    <div class="box box-primary">
                         <div class="box-header with-border">
                             <h3 class="box-title">GENERATE QRCODE</h3>
                         </div>
                         <div class="box-body">
                             <div class="form-group">
                                 <label for="exampleInputEmail1">INPUT NAMA DI SINI</label>
-                                <input type="text" onChang="ready()" id="id" name="nis" class="form-control" placeholder="Masukkan nama yang terdaftar">
+                                <input type="text" onChang="ready()" id="id"  name="id_karyawan" class="form-control" placeholder="Masukkan Nama yang terdaftar di Data Karyawan">
                             </div>
                         </div>
                         <div class="box-footer">
@@ -19,21 +19,19 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <div class="box box-info">
                         <div class="box-header with-border">
                             <h3 class="box-title">INFORMASI QRCODE AKAN MUNCUL DISINI</h3>
                         </div>
-                        <div class="box-body ajax-content" id="showR">
-
-                        </div>
+                        <div class="box-body ajax-content" id="showR"></div>
                     </div>
                 </div>
             </div>
         </section>
     </div>
     <link rel="stylesheet" href="<?php echo base_url() ?>assets/plugins/jQueryUI/css/jquery-ui.css">
-    <script src="<?php echo base_url() ?>assets/plugins/jQueryUI/js/jquery-ui.js"></script>
+    <script  src="<?php echo base_url() ?>assets/plugins/jQueryUI/js/jquery-ui.js"></script>
 
     <script type="text/javascript">
         function pindah() {
@@ -51,12 +49,11 @@
                 },
                 success: function(msg) {
                     $('#showR').html(msg);
-                    $('#nis').focus();
+                    $('#id_karyawan').focus();
                 }
             });
         }
     </script>
-
     <script type="text/javascript">
         $(document).ready(function() {
             $('#id').autocomplete({

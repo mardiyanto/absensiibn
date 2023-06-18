@@ -16,8 +16,8 @@ class Rekap extends CI_Controller
         }
         $models = array(
             'Rekap_model' => 'rekap',
-            'Santri_model' => 'sant',
-            'Pengajar_model' => 'peng'
+            'Gedung_model' => 'gedung',
+            'Karyawan_model' => 'kar',
         );
         $this->load->model($models);
         $this->load->library('form_validation');
@@ -28,7 +28,9 @@ class Rekap extends CI_Controller
     public function index()
     {
         $user = $this->user;
+        $rekap = $this->rekap->get_all();
         $data = array(
+            'rekap_data' => $rekap,
             'user' => $user,
             'users'     => $this->ion_auth->user()->row(),
         );
@@ -36,90 +38,91 @@ class Rekap extends CI_Controller
         $this->load->view('template/datatables');
     }
 
+    public function ajax_list()
+    {
+        $list = $this->rekap->get_datatables();
+        $data = array();
+        $no = $_POST['start'];
+        foreach ($list as $gedung) {
+            $no++;
+            $row = array();
+            $row[]  =  $gedung->nama_gedung;
+            $row[] = $gedung->alamat;
+            $row[] =
+                '
+        <a class="btn btn-lg btn-info btn3d" href="#" title="Rekap Absensi" onclick="absen(' . "'" . $gedung->gedung_id . "'" . ')"><i class="fa fa-check-square"></i> Absensi</a>
+        <a class="btn btn-lg btn-primary btn3d" href="#" title="Laporan" onclick="laporan(' . "'" . $gedung->gedung_id . "'" . ')"><i class="glyphicon glyphicon-pencil"></i> Laporan</a>';
+            $data[] = $row;
+        }
+
+        $output = array(
+            "draw" => $_POST['draw'],
+            "recordsTotal" => $this->rekap->count_all(),
+            "recordsFiltered" => $this->rekap->count_filtered(),
+            "data" => $data,
+        );
+        echo json_encode($output);
+    }
+
     public function ajax_list_modal($id)
     {
-        // var_dump($id);
-        // die();
-        $nomor_induk = $this->input->get('nomor_induk');
+        $id_karyawan = $this->input->get('id_karyawan');
         $start = $this->input->get('tgl');
         $end = $this->input->get('tgl');
         $id_shift = $this->input->get('id_shift');
-        if ($id == "S") {
-            $data['colspan'] = $this->rekap->jmlHadir_1($start, $end);
-        } else {
-            $data['colspan'] = $this->rekap->jmlHadir_2($start, $end);
-        }
+        $data['segment'] = $id;
+        $data['colspan'] = $this->rekap->jmlHadir($segment = $this->uri->segment(3), $start, $end);
+        $data['gedung'] =  $this->gedung->get_by_id($segment = $this->uri->segment(3));
         $data['start'] = $this->input->get('tgl');
         $data['end'] = $this->input->get('tgl');
         $data['id_shift'] = $this->input->get('id_shift');
-        if ($id == "S") {
-            $data['resultHadir'] =   $this->rekap->resultHadir2_1($start, $end);
-            $data['data'] = $this->rekap->resultHadir2_1($start, $end);
-        } else {
-            $data['resultHadir'] =   $this->rekap->resultHadir2_2($start, $end);
-            $data['data'] = $this->rekap->resultHadir2_2($start, $end);
-        }
+        $data['resultHadir'] =   $this->rekap->resultHadir2($segment, $start, $end);
+        $data['data'] = $this->rekap->resultHadir2($segment, $start, $end);
         $startdate = $this->input->get('start');
         $st = date('Y-m-d', strtotime($startdate));
         $t = explode('-', $st);
         $bulan = $this->tanggal->bulan($t[1]);
         $data['periode'] = $bulan . '&nbsp' . $t[0];
         $id_khd['id_khd'] = set_value('id_khd');
-        if ($id == "S") {
-            $result = array(
-                $this->rekap->santri_bak2_1($id, $start, $end),
-            );
-        } else {
-            $result = array(
-                $this->rekap->santri_bak2_2($id, $start, $end),
-            );
-        }
+        $result = array(
+            $this->rekap->karyawan_bak2($id, $start, $end),
+        );
         $this->load->view("rekap/modalAbsen", $data, $id_khd, $result);
     }
 
-    public function ajax_list_laporan()
+    public function ajax_list_laporan($id)
     {
         $user = $this->user;
         $data['user'] = $user;
         $start = $this->input->get('tgl');
         $end = $this->input->get('tgl');
+        $data['segment'] = $id;
         $this->load->view("rekap/ModalLaporan", $data, $start, $end);
     }
 
     public function ajax_list_modal2($id)
     {
-        $nomor_induk = $this->input->get('nomor_induk');
+
+        $id_karyawan = $this->input->get('id_karyawan');
         $start = $this->input->get('tgl');
         $end = $this->input->get('tgl');
         $id_shift = $this->input->get('$id_shift');
+        $data['segment'] = $id;
         $data['id_khd'] = set_value('id_khd');
-        if ($id == "S") {
-            $data['colspan'] = $this->rekap->jmlHadir_1($start, $end);
-        } else {
-            $data['colspan'] = $this->rekap->jmlHadir_2($start, $end);
-        }
+        $data['colspan'] = $this->rekap->jmlHadir($segment = $this->uri->segment(3), $start, $end);
+        $data['gedung'] =  $this->gedung->get_by_id($segment = $this->uri->segment(3));
         $data['start'] = $this->input->get('tgl');
         $data['end'] = $this->input->get('tgl');
         $data['id_shift'] = $this->input->get('id_shift');
-        if ($id == "S") {
-            $data['resultHadir2'] = $this->rekap->santri_bak3_1($start, $end, $id_shift);
-        } else {
-            $data['resultHadir2'] = $this->rekap->santri_bak3_2($start, $end, $id_shift);
-        }
+        $data['resultHadir2'] = $this->rekap->karyawan_bak3($segment, $start, $end, $id_shift);
         $startdate = $this->input->get('start');
         $st = date('Y-m-d', strtotime($startdate));
         $t = explode('-', $st);
         $bulan = $this->tanggal->bulan($t[1]);
         $data['periode'] = $bulan . '&nbsp' . $t[0];
-        if ($id == "S") {
-            $result = array(
-                $this->rekap->santri_bak3_1($id, $start, $end, $id_shift),
-            );
-        } else {
-            $result = array(
-                $this->rekap->santri_bak3_2($id, $start, $end, $id_shift),
-            );
-        }
+        $result = array(
+            $this->rekap->karyawan_bak3($id, $start, $end, $id_shift),
+        );
         $this->load->view("rekap/modalAbsen", $data, $result);
     }
 

@@ -37,15 +37,21 @@ class Dashboard extends CI_Controller
 		$box = [
 			[
 				'box' 		=> 'light-blue',
-				'total' 	=> $this->dashboard->total('santri'),
-				'title'		=> 'Santri',
+				'total' 	=> $this->dashboard->total('karyawan'),
+				'title'		=> 'Karyawan',
 				'icon'		=> 'user'
 			],
 			[
 				'box' 		=> 'olive',
-				'total' 	=> $this->dashboard->total('kelompok'),
-				'title'		=> 'Kelompok',
+				'total' 	=> $this->dashboard->total('jabatan'),
+				'title'		=> 'Jabatan',
 				'icon'		=> 'briefcase'
+			],
+			[
+				'box' 		=> 'yellow-active',
+				'total' 	=> $this->dashboard->total('gedung'),
+				'title'		=> 'lokasi',
+				'icon'		=> 'building'
 			],
 			[
 				'box' 		=> 'red',
