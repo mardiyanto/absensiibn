@@ -1,3 +1,3 @@
 <?php 
-$koneksi = mysqli_connect("localhost", "root", "" ,"db_absensikar");
+$koneksi = mysqli_connect("localhost", "root", "" ,"db_absensiibn");
 ?>
